@@ -8,9 +8,9 @@
 ```
 
   > Адрес образа на github
-      https://github.com/imfw/docker/tree/master/stable/docker-mysql-stable
+      https://github.com/imfw/docker-stable-mysql
 
   > Адрес образа на docker hub
-      https://hub.docker.com/r/forestwind/docker-mysql-stable/
+      https://hub.docker.com/r/forestwind/docker-stable-mysql/
 			
 ```
