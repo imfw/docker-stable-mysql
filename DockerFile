@@ -72,7 +72,7 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 
 ENV EXPOSE_PORT 3306
 
-EXPOSE EXPOSE_PORT
+EXPOSE 3307
 CMD ["mysqld"]
 
 
