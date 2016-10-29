@@ -7,9 +7,8 @@
 ##
 
 # 1. Базовый образ и разработчики
-MAINTAINER Alex Malov <al.malov@gmail.com>
-
 FROM debian:jessie
+MAINTAINER Alex Malov <al.malov@gmail.com>
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
