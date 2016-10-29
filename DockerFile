@@ -71,9 +71,9 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -s usr/local/bin/docker-entrypoint.sh /entrypoint.sh # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-УТМ EXPOSE_PORT 3306
+ENV EXPOSE_PORT 3306
 
-EXPOSE 3306
+EXPOSE EXPOSE_PORT
 CMD ["mysqld"]
 
 
