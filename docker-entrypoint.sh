@@ -1,14 +1,53 @@
 #!/bin/bash
 set -eo pipefail
+shopt -s nullglob
 
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
 	set -- mysqld "$@"
 fi
 
-if [ "$1" = 'mysqld' ]; then
+# skip setup if they want an option that stops mysqld
+wantHelp=
+for arg; do
+	case "$arg" in
+		-'?'|--help|--print-defaults|-V|--version)
+			wantHelp=1
+			break
+			;;
+	esac
+done
+
+_check_config() {
+	toRun=( "$@" --verbose --help )
+	if ! errors="$("${toRun[@]}" 2>&1 >/dev/null)"; then
+		cat >&2 <<-EOM
+			ERROR: mysqld failed while attempting to check config
+			command was: "${toRun[*]}"
+			$errors
+		EOM
+		exit 1
+	fi
+}
+
+_datadir() {
+	"$@" --verbose --help 2>/dev/null | awk '$1 == "datadir" { print $2; exit }'
+}
+
+# allow the container to be started with `--user`
+if [ "$1" = 'mysqld' -a -z "$wantHelp" -a "$(id -u)" = '0' ]; then
+	_check_config "$@"
+	DATADIR="$(_datadir "$@")"
+	mkdir -p "$DATADIR"
+	chown -R mysql:mysql "$DATADIR"
+	exec gosu mysql "$BASH_SOURCE" "$@"
+fi
+
+if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
+	# still need to check config, container may have started with --user
+	_check_config "$@"
 	# Get config
-	DATADIR="$("$@" --verbose --help 2>/dev/null | awk '$1 == "datadir" { print $2; exit }')"
+	DATADIR="$(_datadir "$@")"
 
 	if [ ! -d "$DATADIR/mysql" ]; then
 		if [ -z "$MYSQL_ROOT_PASSWORD" -a -z "$MYSQL_ALLOW_EMPTY_PASSWORD" -a -z "$MYSQL_RANDOM_ROOT_PASSWORD" ]; then
@@ -18,7 +57,6 @@ if [ "$1" = 'mysqld' ]; then
 		fi
 
 		mkdir -p "$DATADIR"
-		chown -R mysql:mysql "$DATADIR"
 
 		echo 'Initializing database'
 		"$@" --initialize-insecure
@@ -105,8 +143,6 @@ if [ "$1" = 'mysqld' ]; then
 		echo 'MySQL init process done. Ready for start up.'
 		echo
 	fi
-
-	chown -R mysql:mysql "$DATADIR"
 fi
 
 exec "$@"
